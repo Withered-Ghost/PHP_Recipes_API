@@ -1,0 +1,7 @@
+services:
+php:
+    image: php:8.2-fpm
+    container_name: php
+    volumes:
+      - ./api:/var/www/html/api
+    restart: always
