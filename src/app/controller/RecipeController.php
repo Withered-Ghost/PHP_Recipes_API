@@ -12,12 +12,20 @@ class RecipeController {
     public function __construct($uid, $rating) {
         $this->pdo = (new DatabaseConnector())->get_connector();
         $this->recipe_obj = new RecipeModel($this->pdo);
-        $this->uid = (int)$uid;
-        $this->rating = (int)$rating;
+        $this->uid = (int) $uid;
+        $this->rating = (int) $rating;
         $this->res_arr = array(
             200 => array(
                 "status" => 200,
                 "message" => "OK"
+            ),
+            201 => array(
+                "status" => 201,
+                "message" => "Created"
+            ),
+            400 => array(
+                "status" => 400,
+                "message" => "Bad Request"
             ),
             403 => array(
                 "status" => 403,
@@ -56,7 +64,7 @@ class RecipeController {
                         echo 3;
                     } else if (! $this->uid && ! $this->rating){
                         // create recipe
-                        echo 4;
+                        $response = $this->create_recipe();
                     } else {
                         $response = $this->res_arr[404];
                     }
@@ -107,7 +115,35 @@ class RecipeController {
             return $this->res_arr[500];
         }
         $response = $this->res_arr[200];
-        $response["data"] = $result[0];
+        $response["data"] = $result;
         return $response;
+    }
+
+    private function create_recipe() {
+        $input = (array) json_decode(file_get_contents("php://input"), true);
+        if (! $this->validate_recipe($input)) {
+            return $this->res_arr[400];
+        }
+        $result = $this->recipe_obj->insert($input);
+        if (isset($result["error"])) {
+            return $this->res_arr[500];
+        }
+        return $this->res_arr[201];
+    }
+
+    private function validate_recipe($input) {
+        if (! isset($input["name"]) || ! is_string($input["name"]) || ! $input["name"]) {
+            return false;
+        }
+        if (! isset($input["prep_time"]) || ! is_int($input["prep_time"]) || $input["prep_time"] < 1) {
+            return false;
+        }
+        if (! isset($input["difficulty"]) || ! is_int($input["difficulty"]) || $input["difficulty"] < 1 || $input["difficulty"] > 3) {
+            return false;
+        }
+        if (! isset($input["veg"]) || ! is_bool($input["veg"])) {
+            return false;
+        }
+        return true;
     }
 }
