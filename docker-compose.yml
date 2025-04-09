@@ -4,24 +4,24 @@ services:
     container_name: nginx
     volumes:
       - "./etc/nginx/default.conf:/etc/nginx/conf.d/default.conf"
-      - "./src/public:/var/www/html/public"
-      - "./src/app:/var/www/html/app"
+      - "./src:/var/www/html"
     ports:
       - 8080:80
     restart: always
     depends_on:
       - php
       - mysqldb
+      - composer
 
   php:
     build: "."
     container_name: php
     volumes:
-      - "./src/public:/var/www/html/public"
-      - "./src/app:/var/www/html/app"
+      - "./src:/var/www/html"
     restart: always
     depends_on:
       - mysqldb
+      - composer
 
   mysqldb:
     image: mysql:latest
@@ -34,3 +34,9 @@ services:
       MYSQL_ROOT_PASSWORD: 1123581321
       MYSQL_USER: user
       MYSQL_PASSWORD: pass
+
+  composer:
+    image: composer:latest
+    volumes:
+      - "./src/app:/app"
+    command: install
