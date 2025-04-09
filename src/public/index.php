@@ -26,6 +26,7 @@ if ($uri[1] === "recipes") {
 }
 
 http_response_code(404);
-$response["status"] = 404;
-$response["message"] = "Not Found";
-echo json_encode($response);
+echo json_encode(array(
+    "status" => 404,
+    "message" => "Not Found"
+));

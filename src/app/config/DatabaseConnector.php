@@ -1,10 +1,12 @@
 <?php
 require __DIR__ . "/env_loader.php";
 
-class DatabaseConnector {
+class DatabaseConnector
+{
     private $pdo = null;
 
-    public function __construct() {
+    public function __construct()
+    {
         $hostname = getenv("db_hostname");
         $username = getenv("db_user");
         $password = getenv("db_password");
@@ -23,7 +25,8 @@ class DatabaseConnector {
         }
     }
 
-    public function get_connector() {
+    public function get_connector()
+    {
         return $this->pdo;
     }
 }

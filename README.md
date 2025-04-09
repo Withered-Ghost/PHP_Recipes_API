@@ -31,5 +31,5 @@ create table recipes (
 | Create | `POST`      | `/recipes`             | 1         |
 | Get    | `GET`       | `/recipes/{id}`        | 0         |
 | Update | `PUT/PATCH` | `/recipes/{id}`        | 1         |
-| Delete | `DELETE`    | `/recipes/{id}`        | 1         |
 | Rate   | `POST`      | `/recipes/{id}/rating` | 0         |
+| Delete | `DELETE`    | `/recipes/{id}`        | 1         |
