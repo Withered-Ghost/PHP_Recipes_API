@@ -1,11 +1,14 @@
 <?php
 require __DIR__ . "/../app/controller/RecipeController.php";
+require __DIR__ . "/../app/config/DatabaseConnector.php";
 
 header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json; charset=UTF-8");
 header("Access-Control-Allow-Methods: GET,POST,PUT,DELETE");
 header("Access-Control-Max-Age: 3600");
 header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
+
+$pdo = (new DatabaseConnector())->get_connector();
 
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $uri = explode('/', $uri);
@@ -19,8 +22,8 @@ if ($uri[1] === "recipes") {
     if (sizeof($uri) > 3 && $uri[3]) {
         $rating = $uri[3];
     }
-    // echo var_dump($uri);
-    $recipe_controller = new RecipeController($uid, $rating);
+
+    $recipe_controller = new RecipeController($uid, $rating, $pdo);
     $recipe_controller->process_request();
     exit();
 }

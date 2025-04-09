@@ -19,7 +19,7 @@ class DatabaseConnector
         ];
 
         try {
-            $this->pdo = new \PDO($dsn, $username, $password, $options);
+            $this->pdo = new PDO($dsn, $username, $password, $options);
         } catch (PDOException $e) {
             die("Database connection error: " . $e->getMessage());
         }

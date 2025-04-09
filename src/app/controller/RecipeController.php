@@ -1,5 +1,4 @@
 <?php
-require __DIR__ . "/../config/DatabaseConnector.php";
 require __DIR__ . "/../model/RecipeModel.php";
 
 class RecipeController
@@ -10,9 +9,9 @@ class RecipeController
     private $recipe_obj = null;
     private $msg_arr = null;
 
-    public function __construct($uid, $rating)
+    public function __construct($uid, $rating, $pdo)
     {
-        $this->pdo = (new DatabaseConnector())->get_connector();
+        $this->pdo = $pdo;
         $this->recipe_obj = new RecipeModel($this->pdo);
         $this->uid = (int) $uid;
         $this->rating = (int) $rating;
@@ -85,7 +84,7 @@ class RecipeController
             case "DELETE":
                 if ($this->uid && !$this->rating) {
                     // delete recipe
-                    echo 6;
+                    $response = $this->delete_recipe($this->uid);
                 } else {
                     $response = $this->msg_arr[404];
                 }
@@ -102,7 +101,7 @@ class RecipeController
 
     private function get_one_recipe($uid)
     {
-        if (! is_int($uid) || $uid < 1) {
+        if (!is_int($uid) || $uid < 1) {
             return $this->msg_arr[400];
         }
         $result = $this->recipe_obj->find_one($uid);
@@ -136,9 +135,6 @@ class RecipeController
         }
         $result = $this->recipe_obj->insert($input);
         if (isset($result["error"])) {
-            // $response = $this->msg_arr[500];
-            // $response["error"] = $result["error"];
-            // return $response;
             return $this->msg_arr[500];
         }
         $response = $this->msg_arr[201];
@@ -155,9 +151,6 @@ class RecipeController
         }
         $result = $this->recipe_obj->update($input);
         if (isset($result["error"])) {
-            // $response = $this->msg_arr[500];
-            // $response["error"] = $result["error"];
-            // return $response;
             return $this->msg_arr[500];
         }
         $response = $this->msg_arr[200];
@@ -167,10 +160,24 @@ class RecipeController
 
     private function rate_recipes($uid, $rating)
     {
-        if (! is_int($rating) || $rating < 1 || $rating > 5 || ! is_int($uid) || $uid < 1) {
+        if (!is_int($rating) || $rating < 1 || $rating > 5 || !is_int($uid) || $uid < 1) {
             return $this->msg_arr[400];
         }
         $result = $this->recipe_obj->rate($uid, $rating);
+        if (isset($result["error"])) {
+            return $this->msg_arr[500];
+        }
+        $response = $this->msg_arr[200];
+        $response["affected_rows"] = $result[0];
+        return $response;
+    }
+
+    private function delete_recipe($uid)
+    {
+        if (!is_int($uid) || $uid < 1) {
+            return $this->msg_arr[400];
+        }
+        $result = $this->recipe_obj->delete($uid);
         if (isset($result["error"])) {
             return $this->msg_arr[500];
         }

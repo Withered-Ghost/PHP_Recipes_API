@@ -104,4 +104,19 @@ class RecipeModel
             return array("error" => $e->getMessage());
         }
     }
+
+    public function delete($uid)
+    {
+        $statement = "DELETE FROM recipes WHERE uid = :uid;";
+        try {
+            $prepared = $this->pdo->prepare($statement);
+            $executed = $prepared->execute(array(
+                "uid" => (int) $uid
+            ));
+            $result = $prepared->rowCount();
+            return array($result);
+        } catch (PDOException $e) {
+            return array("error" => $e->getMessage());
+        }
+    }
 }
