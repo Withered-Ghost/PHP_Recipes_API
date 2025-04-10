@@ -1,6 +1,9 @@
 <?php
-require __DIR__ . "/../app/controller/RecipeController.php";
-require __DIR__ . "/../app/config/DatabaseConnector.php";
+require_once __DIR__ . "/../app/vendor/autoload.php";
+require_once __DIR__ . "/../app/controller/LoginController.php";
+require_once __DIR__ . "/../app/controller/RecipeController.php";
+require_once __DIR__ . "/../app/config/DatabaseConnector.php";
+require_once __DIR__ . "/../app/view/ResponseView.php";
 
 header("Content-Type: application/json; charset=UTF-8");
 header("Access-Control-Allow-Origin: *");
@@ -22,16 +25,22 @@ $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $uri = explode('/', $uri);
 
 if ($uri[1] === "recipes") {
-    $uid = $uri[2] ?? null;
-    $rating = $uri[3] ?? null;
+    $uri_2 = $uri[2] ?? null;
+    $uri_3 = $uri[3] ?? null;
+    $uri_4 = $uri[4] ?? null;
 
-    $recipe_controller = new RecipeController($uid, $rating, $pdo);
-    $recipe_controller->process_request();
-    exit();
+    if ($uri_2 === "login" && !$uri_3) {
+        // login and return JWT
+        $login_controller = new LoginController($pdo);
+        $login_controller->process_login();
+        exit();
+    } else if (!$uri_4) {
+        $recipe_controller = new RecipeController($uri_2, $uri_3, $pdo);
+        $recipe_controller->process_request();
+        exit();
+    }
 }
 
 http_response_code(404);
-echo json_encode(array(
-    "status" => 404,
-    "message" => "Not Found"
-));
+echo json_encode(ResponseView::$msg_arr[404]);
+exit();

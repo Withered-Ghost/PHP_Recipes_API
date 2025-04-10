@@ -13,6 +13,12 @@ create table recipes (
   CHECK (0.0<=rating AND rating<=5.0)
 );
 
+create table users (
+  email varchar(255) PRIMARY KEY,
+  password varchar(255) NOT NULL,
+  root BOOLEAN NOT NULL DEFAULT 0
+);
+
 +--------------+--------------+------+-----+---------+-------+
 | Field        | Type         | Null | Key | Default | Extra |
 +--------------+--------------+------+-----+---------+-------+

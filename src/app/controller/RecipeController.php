@@ -1,5 +1,7 @@
 <?php
-require __DIR__ . "/../model/RecipeModel.php";
+require_once __DIR__ . "/../model/RecipeModel.php";
+require_once __DIR__ . "/../view/ResponseView.php";
+require __DIR__ . "/../middleware/jwt_auth.php";
 
 class RecipeController
 {
@@ -7,7 +9,6 @@ class RecipeController
     private $uid = null;
     private $rating = null;
     private $recipe_obj = null;
-    private $msg_arr = null;
 
     public function __construct($uid, $rating, $pdo)
     {
@@ -15,37 +16,12 @@ class RecipeController
         $this->recipe_obj = new RecipeModel($this->pdo);
         $this->uid = (int) $uid;
         $this->rating = (int) $rating;
-        $this->msg_arr = array(
-            200 => array(
-                "status" => 200,
-                "message" => "OK"
-            ),
-            201 => array(
-                "status" => 201,
-                "message" => "Created"
-            ),
-            400 => array(
-                "status" => 400,
-                "message" => "Bad Request"
-            ),
-            403 => array(
-                "status" => 403,
-                "message" => "Forbidden"
-            ),
-            404 => array(
-                "status" => 404,
-                "message" => "Not Found"
-            ),
-            500 => array(
-                "status" => 500,
-                "message" => "Internal Server Error"
-            )
-        );
     }
 
     public function process_request()
     {
         $response = null;
+        $auth = null;
 
         switch ($_SERVER["REQUEST_METHOD"]) {
             case "GET":
@@ -56,7 +32,7 @@ class RecipeController
                     // get all recipes
                     $response = $this->get_all_recipes();
                 } else {
-                    $response = $this->msg_arr[404];
+                    $response = ResponseView::$msg_arr[404];
                 }
                 break;
 
@@ -66,32 +42,47 @@ class RecipeController
                     $response = $this->rate_recipes($this->uid, $this->rating);
                 } else if (!$this->uid && !$this->rating) {
                     // create recipe
+                    $auth = require_jwt_auth();
+                    if ($auth !== 200) {
+                        $response = ResponseView::$msg_arr[$auth];
+                        break;
+                    }
                     $response = $this->create_recipe();
                 } else {
-                    $response = $this->msg_arr[404];
+                    $response = ResponseView::$msg_arr[404];
                 }
                 break;
 
             case "PUT":
                 if ($this->uid && !$this->rating) {
                     // update recipe
+                    $auth = require_jwt_auth();
+                    if ($auth !== 200) {
+                        $response = ResponseView::$msg_arr[$auth];
+                        break;
+                    }
                     $response = $this->update_recipe($this->uid);
                 } else {
-                    $response = $this->msg_arr[404];
+                    $response = ResponseView::$msg_arr[404];
                 }
                 break;
 
             case "DELETE":
                 if ($this->uid && !$this->rating) {
                     // delete recipe
+                    $auth = require_jwt_auth();
+                    if ($auth !== 200) {
+                        $response = ResponseView::$msg_arr[$auth];
+                        break;
+                    }
                     $response = $this->delete_recipe($this->uid);
                 } else {
-                    $response = $this->msg_arr[404];
+                    $response = ResponseView::$msg_arr[404];
                 }
                 break;
 
             default:
-                $response = $this->msg_arr[404];
+                $response = ResponseView::$msg_arr[404];
                 break;
         }
 
@@ -102,16 +93,16 @@ class RecipeController
     private function get_one_recipe($uid)
     {
         if (!is_int($uid) || $uid < 1) {
-            return $this->msg_arr[400];
+            return ResponseView::$msg_arr[400];
         }
         $result = $this->recipe_obj->find_one($uid);
         if (isset($result["error"])) {
-            return $this->msg_arr[500];
+            return ResponseView::$msg_arr[500];
         }
-        if (sizeof($result) == 0) {
-            return $this->msg_arr[404];
+        if (sizeof($result) === 0) {
+            return ResponseView::$msg_arr[404];
         }
-        $response = $this->msg_arr[200];
+        $response = ResponseView::$msg_arr[200];
         $response["data"] = $result[0];
         return $response;
     }
@@ -120,9 +111,9 @@ class RecipeController
     {
         $result = $this->recipe_obj->find_all();
         if (isset($result["error"])) {
-            return $this->msg_arr[500];
+            return ResponseView::$msg_arr[500];
         }
-        $response = $this->msg_arr[200];
+        $response = ResponseView::$msg_arr[200];
         $response["data"] = $result;
         return $response;
     }
@@ -131,13 +122,13 @@ class RecipeController
     {
         $input = (array) json_decode(file_get_contents("php://input"), true);
         if (!$this->validate_recipe($input, false)) {
-            return $this->msg_arr[400];
+            return ResponseView::$msg_arr[400];
         }
         $result = $this->recipe_obj->insert($input);
         if (isset($result["error"])) {
-            return $this->msg_arr[500];
+            return ResponseView::$msg_arr[500];
         }
-        $response = $this->msg_arr[201];
+        $response = ResponseView::$msg_arr[201];
         $response["affected_rows"] = $result[0];
         return $response;
     }
@@ -147,13 +138,13 @@ class RecipeController
         $input = (array) json_decode(file_get_contents("php://input"), true);
         $input["uid"] = $uid;
         if (!$this->validate_recipe($input, true)) {
-            return $this->msg_arr[400];
+            return ResponseView::$msg_arr[400];
         }
         $result = $this->recipe_obj->update($input);
         if (isset($result["error"])) {
-            return $this->msg_arr[500];
+            return ResponseView::$msg_arr[500];
         }
-        $response = $this->msg_arr[200];
+        $response = ResponseView::$msg_arr[200];
         $response["affected_rows"] = $result[0];
         return $response;
     }
@@ -161,13 +152,13 @@ class RecipeController
     private function rate_recipes($uid, $rating)
     {
         if (!is_int($rating) || $rating < 1 || $rating > 5 || !is_int($uid) || $uid < 1) {
-            return $this->msg_arr[400];
+            return ResponseView::$msg_arr[400];
         }
         $result = $this->recipe_obj->rate($uid, $rating);
         if (isset($result["error"])) {
-            return $this->msg_arr[500];
+            return ResponseView::$msg_arr[500];
         }
-        $response = $this->msg_arr[200];
+        $response = ResponseView::$msg_arr[200];
         $response["affected_rows"] = $result[0];
         return $response;
     }
@@ -175,13 +166,13 @@ class RecipeController
     private function delete_recipe($uid)
     {
         if (!is_int($uid) || $uid < 1) {
-            return $this->msg_arr[400];
+            return ResponseView::$msg_arr[400];
         }
         $result = $this->recipe_obj->delete($uid);
         if (isset($result["error"])) {
-            return $this->msg_arr[500];
+            return ResponseView::$msg_arr[500];
         }
-        $response = $this->msg_arr[200];
+        $response = ResponseView::$msg_arr[200];
         $response["affected_rows"] = $result[0];
         return $response;
     }
