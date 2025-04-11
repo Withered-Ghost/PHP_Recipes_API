@@ -35,7 +35,7 @@ docker-compose down
 
 Access the API at:
 
-```http
+```
 http://<Host_IP>:8080/
 ```
 
@@ -51,7 +51,7 @@ Header: `Authorization: Bearer <token>`
 
 #### Error response
 
-```http
+```
 {
     "status": int,
     "message": string
@@ -60,7 +60,7 @@ Header: `Authorization: Bearer <token>`
 
 #### Login to get the JWT
 
-```http
+```
 POST /recipes/login
 Protected: NO
 
@@ -80,7 +80,7 @@ Output:
 
 #### Get all recipes
 
-```http
+```
 GET /recipes
 Protected: NO
 
@@ -104,7 +104,7 @@ Output:
 
 #### Get a single recipe
 
-```http
+```
 GET /recipes/{uid}
 Protected: NO
 
@@ -126,7 +126,7 @@ Output:
 
 #### Create a recipe
 
-```http
+```
 POST /recipes
 Protected: YES
 
@@ -148,7 +148,7 @@ Output:
 
 #### Rate a recipe
 
-```http
+```
 POST /recipes/{uid}/{rating}
 Protected: NO
 
@@ -165,7 +165,7 @@ Output:
 
 #### Update a recipe
 
-```http
+```
 PUT /recipes/{uid}
 Protected: YES
 
@@ -187,7 +187,7 @@ Output:
 
 #### Delete a recipe
 
-```http
+```
 DELETE /recipes/{uid}
 Protected: YES
 
